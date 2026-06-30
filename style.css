@@ -2607,3 +2607,260 @@ p {
   }
 }
 
+/* ============================================================
+   ENHANCEMENTS — Scroll reveal, interactions, cursor trail
+   ============================================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-enter {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .scroll-enter.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .scroll-enter--mobile {
+    transform: translateY(16px);
+    transition-duration: 0.4s;
+  }
+
+  .scroll-enter--mobile.is-visible {
+    transform: translateY(0);
+  }
+
+  /* Hero floating image — desktop only */
+  @keyframes heroFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hero__visual img {
+      animation: heroFloat 5s ease-in-out infinite;
+    }
+  }
+
+  /* Hero warm grain overlay — desktop only (filter is costly on mobile) */
+  @media (hover: hover) and (pointer: fine) {
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1;
+      filter: url(#hero-grain-filter);
+      background: var(--color-primary);
+    }
+  }
+
+  /* Product card hover — fine pointer only */
+  @media (hover: hover) and (pointer: fine) {
+    .product-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 16px 40px rgba(74, 44, 10, 0.15);
+    }
+
+    .product-card:hover .product-card__image-wrap .product-card__image {
+      transform: scale(1.04);
+    }
+  }
+
+  /* WhatsApp sticky — pulse glow */
+  @keyframes whatsappPulse {
+    0%, 100% {
+      box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
+    }
+    50% {
+      box-shadow: 0 4px 24px rgba(37, 211, 102, 0.65), 0 0 0 10px rgba(37, 211, 102, 0.12);
+    }
+  }
+
+  .whatsapp-float {
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    right: calc(24px + env(safe-area-inset-right, 0px));
+    animation: whatsappPulse 2s ease-in-out infinite;
+  }
+
+  .whatsapp-float:hover {
+    animation: none;
+    transform: scale(1.1);
+  }
+
+  /* Ladoo cursor trail */
+  .ladoo-trail-particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%) rotate(var(--ladoo-rotate)) scale(var(--ladoo-scale));
+    opacity: 1;
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  }
+
+  .ladoo-trail-particle.is-active {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-30px) rotate(var(--ladoo-rotate)) scale(var(--ladoo-scale));
+  }
+}
+
+.product-card__image-wrap {
+  overflow: hidden;
+}
+
+.product-card__image-wrap .product-card__image {
+  transition: transform 0.3s ease;
+}
+
+/* Product card WhatsApp CTA */
+.product-card__whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: var(--space-md);
+  padding: 0.625rem 1.25rem;
+  background: #25D366;
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border-radius: 100px;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (hover: hover) {
+  .product-card__whatsapp:hover {
+    background: #1da851;
+    transform: translateY(-1px);
+  }
+}
+
+.product-card__whatsapp:active {
+  background: #1da851;
+  transform: scale(0.98);
+}
+
+/* Button ripple */
+.btn-primary,
+.btn-secondary {
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.btn-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(212, 122, 30, 0.3);
+  transform: scale(0);
+  opacity: 1;
+  pointer-events: none;
+  transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+}
+
+.btn-ripple.is-active {
+  transform: scale(3);
+  opacity: 0;
+}
+
+/* Ladoo trail toggle toast */
+.ladoo-trail-toast {
+  position: fixed;
+  bottom: 96px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: 0.625rem 1.25rem;
+  border-radius: 100px;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.ladoo-trail-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 359px) {
+  .whatsapp-float {
+    display: none;
+  }
+}
+
+/* Mobile optimizations for enhancements */
+@media (max-width: 767px) {
+  .trust-bar {
+    padding: var(--space-xl) 0;
+  }
+
+  .trust-bar__number {
+    font-size: clamp(var(--text-2xl), 6vw, var(--text-3xl));
+    word-break: break-word;
+  }
+
+  .trust-bar__label {
+    font-size: var(--text-xs);
+    line-height: 1.4;
+  }
+
+  .product-card__body {
+    gap: var(--space-sm);
+  }
+
+  .product-card__whatsapp {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+    font-size: var(--text-sm);
+    margin-top: var(--space-sm);
+  }
+
+  .product-card__link {
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .product-card:active {
+    transform: scale(0.99);
+    box-shadow: 0 6px 20px rgba(74, 44, 10, 0.1);
+  }
+
+  .whatsapp-float {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    right: calc(16px + env(safe-area-inset-right, 0px));
+  }
+
+  .ladoo-trail-toast {
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 2rem);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .hero__visual img {
+    box-shadow: 0 8px 32px rgba(74, 44, 10, 0.12);
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .whatsapp-float {
+    animation-duration: 2.5s;
+  }
+}
+

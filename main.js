@@ -10,7 +10,18 @@ document.addEventListener('DOMContentLoaded', () => {
   initProductFilters();
   initSmoothScroll();
   initActiveNav();
+  initScrollEntrance();
+  initTrustBarCountUp();
+  initProductWhatsApp();
+  initProductImageWrap();
+  initButtonRipple();
+  initHeroGrain();
+  initLadooCursor();
 });
+
+function isMobileView() {
+  return window.matchMedia('(max-width: 767px)').matches;
+}
 
 /* ============================================================
    NAVBAR — Scroll Detection
@@ -263,19 +274,6 @@ function initActiveNav() {
       observer.observe(el);
     });
 
-    // Product cards on homepage and products page — staggered slide up
-    // The products grid uses .grid-3 containing .product-card elements
-    document.querySelectorAll('.grid-3').forEach(grid => {
-      const cards = grid.querySelectorAll('.product-card');
-      if (cards.length > 0) {
-        grid.classList.add('anim-stagger');
-        cards.forEach(card => {
-          card.classList.add('anim-slide-up', 'anim-hidden');
-          observer.observe(card);
-        });
-      }
-    });
-
     // Blog cards — staggered
     document.querySelectorAll('.grid-3').forEach(grid => {
       const cards = grid.querySelectorAll('.blog-card');
@@ -286,19 +284,6 @@ function initActiveNav() {
           observer.observe(card);
         });
       }
-    });
-
-    // Trust bar stat items — staggered scale
-    document.querySelectorAll('.trust-bar .container').forEach(bar => {
-      bar.classList.add('anim-stagger');
-      bar.querySelectorAll('.trust-bar__item').forEach(item => {
-        item.classList.add('anim-scale', 'anim-hidden');
-        observer.observe(item);
-      });
-      // Stat numbers pop
-      bar.querySelectorAll('.trust-bar__number').forEach(num => {
-        observer.observe(num);
-      });
     });
 
     // Story teaser — text slides from left, image from right
@@ -325,13 +310,6 @@ function initActiveNav() {
           observer.observe(block);
         });
       }
-    });
-
-    // Testimonial cards
-    document.querySelectorAll('.testimonials-track .testimonial-card').forEach((card, i) => {
-      card.classList.add('anim-scale', 'anim-hidden');
-      card.style.animationDelay = (i * 100) + 'ms';
-      observer.observe(card);
     });
 
     // Timeline items (About page) — alternate left/right
@@ -482,7 +460,7 @@ function initActiveNav() {
 
 (function() {
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReduced) return;
+  if (prefersReduced || isMobileView()) return;
 
   document.addEventListener('click', function(e) {
     const link = e.target.closest('a');
@@ -518,32 +496,272 @@ function initActiveNav() {
 })();
 
 
-/* ============================================
-   PARALLAX ON HERO IMAGE (subtle, not sickening)
-   ============================================ */
+/* ============================================================
+   SCROLL ENTRANCE — IntersectionObserver reveal
+   ============================================================ */
+function initScrollEntrance() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-(function() {
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReduced) return;
+  const mobile = isMobileView();
+  const staggerMs = mobile ? 60 : 100;
+  const maxStagger = mobile ? 240 : 700;
 
-  const heroImage = document.querySelector('.hero__visual');
-  if (!heroImage) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: mobile ? 0.06 : 0.12,
+    rootMargin: mobile ? '0px 0px 8px 0px' : '0px 0px -40px 0px'
+  });
 
-  let ticking = false;
+  document.querySelectorAll('.section, .hero, .trust-bar').forEach(el => {
+    el.classList.add('scroll-enter');
+    if (mobile) el.classList.add('scroll-enter--mobile');
+    observer.observe(el);
+  });
 
-  window.addEventListener('scroll', () => {
-    if (!ticking) {
-      requestAnimationFrame(() => {
-        const scrollY = window.scrollY;
-        // Move image up at 8% of scroll speed — subtle parallax
-        if (scrollY < 800) { // Only parallax in the hero area
-          heroImage.style.transform = `translateY(${scrollY * 0.08}px)`;
-        }
-        ticking = false;
-      });
-      ticking = true;
+  document.querySelectorAll('.grid-3, .testimonials-track').forEach(parent => {
+    const cards = parent.querySelectorAll('.product-card, .testimonial-card');
+    cards.forEach((card, i) => {
+      card.classList.add('scroll-enter');
+      if (mobile) card.classList.add('scroll-enter--mobile');
+      card.style.transitionDelay = `${Math.min(i * staggerMs, maxStagger)}ms`;
+      observer.observe(card);
+    });
+  });
+
+  document.querySelectorAll('.product-card').forEach(card => {
+    if (!card.classList.contains('scroll-enter')) {
+      card.classList.add('scroll-enter');
+      observer.observe(card);
     }
-  }, { passive: true });
+  });
 
-})();
+  document.querySelectorAll('.testimonial-card').forEach(card => {
+    if (!card.classList.contains('scroll-enter')) {
+      card.classList.add('scroll-enter');
+      observer.observe(card);
+    }
+  });
+}
+
+/* ============================================================
+   TRUST BAR — Animated count-up
+   ============================================================ */
+function initTrustBarCountUp() {
+  const trustBar = document.querySelector('.trust-bar');
+  if (!trustBar) return;
+
+  const numbers = trustBar.querySelectorAll('.trust-bar__number');
+  numbers.forEach(el => {
+    el.dataset.countTarget = el.textContent.trim();
+  });
+
+  const mobile = isMobileView();
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      numbers.forEach(el => animateCountUp(el, mobile ? 1500 : 2000));
+      observer.disconnect();
+    });
+  }, { threshold: mobile ? 0.35 : 0.5 });
+
+  observer.observe(trustBar);
+}
+
+function easeOutQuad(t) {
+  return t * (2 - t);
+}
+
+function formatIndianNumber(num) {
+  const str = String(Math.floor(num));
+  if (str.length <= 3) return str;
+  const lastThree = str.slice(-3);
+  const rest = str.slice(0, -3);
+  return rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + lastThree;
+}
+
+function animateCountUp(el, duration = 2000) {
+  const raw = el.dataset.countTarget || el.textContent.trim();
+  const hasPlus = raw.endsWith('+');
+  const digitsOnly = raw.replace(/,/g, '').replace(/\+$/, '');
+  const target = parseInt(digitsOnly, 10);
+
+  if (Number.isNaN(target)) return;
+
+  const start = performance.now();
+  el.textContent = hasPlus ? '0+' : '0';
+
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = easeOutQuad(progress);
+    const current = Math.round(target * eased);
+    el.textContent = formatIndianNumber(current) + (hasPlus ? '+' : '');
+    if (progress < 1) requestAnimationFrame(tick);
+    else el.textContent = raw;
+  }
+
+  requestAnimationFrame(tick);
+}
+
+/* ============================================================
+   PRODUCT CARDS — WhatsApp order CTA
+   ============================================================ */
+const WHATSAPP_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
+
+function initProductWhatsApp() {
+  document.querySelectorAll('.product-card').forEach(card => {
+    const body = card.querySelector('.product-card__body');
+    const nameEl = card.querySelector('.product-card__name');
+    if (!body || !nameEl || body.querySelector('.product-card__whatsapp')) return;
+
+    const productName = nameEl.textContent.trim();
+    const message = encodeURIComponent(`Hi, I'd like to order ${productName}`);
+    const link = document.createElement('a');
+    link.href = `https://wa.me/919504959501?text=${message}`;
+    link.className = 'product-card__whatsapp';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.innerHTML = WHATSAPP_SVG + ' Order on WhatsApp';
+    body.appendChild(link);
+  });
+}
+
+function initProductImageWrap() {
+  document.querySelectorAll('.product-card__image').forEach(img => {
+    if (img.parentElement.classList.contains('product-card__image-wrap')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'product-card__image-wrap';
+    img.parentNode.insertBefore(wrap, img);
+    wrap.appendChild(img);
+  });
+}
+
+/* ============================================================
+   BUTTON RIPPLE — Click effect on primary/secondary buttons
+   ============================================================ */
+function initButtonRipple() {
+  document.querySelectorAll('.btn-primary, .btn-secondary').forEach(btn => {
+    if (btn.dataset.rippleInit) return;
+    btn.dataset.rippleInit = 'true';
+
+    const spawnRipple = (clientX, clientY) => {
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const ripple = document.createElement('span');
+      ripple.className = 'btn-ripple';
+      ripple.style.width = `${size}px`;
+      ripple.style.height = `${size}px`;
+      ripple.style.left = `${clientX - rect.left - size / 2}px`;
+      ripple.style.top = `${clientY - rect.top - size / 2}px`;
+      btn.appendChild(ripple);
+
+      const cleanup = (ev) => {
+        if (ev.propertyName !== 'opacity') return;
+        ripple.removeEventListener('transitionend', cleanup);
+        ripple.remove();
+      };
+      ripple.addEventListener('transitionend', cleanup);
+
+      requestAnimationFrame(() => {
+        ripple.classList.add('is-active');
+      });
+    };
+
+    btn.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      spawnRipple(e.clientX, e.clientY);
+    });
+  });
+}
+
+/* ============================================================
+   HERO — SVG grain filter injection
+   ============================================================ */
+function initHeroGrain() {
+  if (isMobileView() || window.matchMedia('(hover: none)').matches) return;
+  if (document.getElementById('hero-grain-svg')) return;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('id', 'hero-grain-svg');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;';
+  svg.innerHTML = '<filter id="hero-grain-filter" x="0%" y="0%" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>';
+  document.body.appendChild(svg);
+}
+
+/* ============================================================
+   LADOO CURSOR TRAIL
+   ============================================================ */
+function initLadooCursor() {
+  if (window.matchMedia('(hover: none)').matches) return;
+
+  let enabled = true;
+  let lastSpawn = 0;
+  const THROTTLE_MS = 60;
+  const DURATION_MS = 700;
+
+  const toast = document.createElement('div');
+  toast.className = 'ladoo-trail-toast';
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  document.body.appendChild(toast);
+
+  function showToast(text) {
+    toast.textContent = text;
+    toast.classList.add('is-visible');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => toast.classList.remove('is-visible'), 1500);
+  }
+
+  function createLadooSVG() {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="13" r="9" fill="#D47A1E"/>
+      <ellipse cx="9" cy="10" rx="2.5" ry="1.5" fill="rgba(255,255,255,0.35)"/>
+      <circle cx="12" cy="4.5" r="2.2" fill="#4A2C0A"/>
+    </svg>`;
+  }
+
+  function spawnLadoo(x, y) {
+    const el = document.createElement('div');
+    el.className = 'ladoo-trail-particle';
+    const rotation = (Math.random() * 40 - 20).toFixed(1);
+    const scale = (Math.random() * 0.5 + 0.4).toFixed(2);
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.style.setProperty('--ladoo-rotate', `${rotation}deg`);
+    el.style.setProperty('--ladoo-scale', scale);
+    el.innerHTML = createLadooSVG();
+    document.body.appendChild(el);
+
+    requestAnimationFrame(() => el.classList.add('is-active'));
+
+    const cleanup = () => {
+      el.removeEventListener('transitionend', cleanup);
+      el.remove();
+    };
+    el.addEventListener('transitionend', cleanup);
+    setTimeout(cleanup, DURATION_MS + 50);
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    if (!enabled) return;
+    const now = performance.now();
+    if (now - lastSpawn < THROTTLE_MS) return;
+    lastSpawn = now;
+    spawnLadoo(e.clientX, e.clientY);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'l' && e.key !== 'L') return;
+    if (e.target.matches('input, textarea, select, [contenteditable="true"]')) return;
+    enabled = !enabled;
+    showToast(enabled ? '✦ Ladoo trail on' : '✦ Ladoo trail off');
+  });
+}
 
