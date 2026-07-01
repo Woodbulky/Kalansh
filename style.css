@@ -964,6 +964,62 @@ p {
   margin-right: auto;
 }
 
+/* Page hero with a background image (e.g. About banner) */
+.page-hero--image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: clamp(5rem, 12vw, 9rem) 0;
+}
+
+.page-hero--image::before {
+  display: none;
+}
+
+.page-hero--image h1 {
+  color: var(--color-text-light);
+}
+
+.page-hero--image p {
+  color: rgba(250, 246, 238, 0.88);
+}
+
+/* Two-column visual inside the dark empowerment section */
+.empowerment__visual {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2xl);
+  align-items: center;
+  margin-top: var(--space-3xl);
+}
+
+@media (min-width: 768px) {
+  .empowerment__visual {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.empowerment__visual img {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+}
+
+/* Founder monogram fallback (when no photo is available) */
+.founder-card__monogram {
+  width: 100%;
+  aspect-ratio: 4/5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: var(--color-text-light);
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 4.5rem);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
 /* ============================================================
    TIMELINE (About Page)
    ============================================================ */
@@ -1130,6 +1186,93 @@ p {
 /* ============================================================
    PRODUCT FILTER TABS
    ============================================================ */
+/* ============================================================
+   PRODUCT SEARCH
+   ============================================================ */
+.product-search {
+  position: relative;
+  max-width: 480px;
+  margin: 0 auto var(--space-xl);
+}
+
+.product-search__icon {
+  position: absolute;
+  left: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.product-search__input {
+  width: 100%;
+  padding: 0.9rem 2.8rem 0.9rem 3rem;
+  border-radius: 100px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.product-search__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.product-search__input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(212,122,30,0.1);
+}
+
+/* Hide the native search clear button — we use our own */
+.product-search__input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.product-search__clear {
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.product-search__clear:hover {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+}
+
+.products-no-results {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-lg);
+  padding: var(--space-3xl) 0;
+}
+
+.products-no-results__reset {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: inherit;
+  font-family: var(--font-body);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
 .filter-tabs {
   display: flex;
   gap: var(--space-sm);
@@ -1451,6 +1594,89 @@ p {
 .form-group textarea {
   resize: vertical;
   min-height: 120px;
+}
+
+/* --- Form validation states --- */
+.form-error {
+  display: block;
+  min-height: 1.1em;
+  margin-top: 0.4rem;
+  font-size: var(--text-sm);
+  color: #b3261e;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.form-group.has-error .form-error {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.form-group.has-error input,
+.form-group.has-error textarea {
+  border-color: #d9534f;
+  background: #fdf3f2;
+}
+
+.form-group.has-error input:focus,
+.form-group.has-error textarea:focus {
+  border-color: #d9534f;
+  box-shadow: 0 0 0 3px rgba(217,83,79,0.12);
+}
+
+/* --- Success panel --- */
+.form-success {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-xl);
+  background: var(--color-surface);
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+  animation: fadeInUp 0.4s ease both;
+}
+
+.form-success__icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-success, #3B6D11);
+  color: #fff;
+}
+
+.form-success h3 {
+  margin-bottom: var(--space-sm);
+}
+
+.form-success p {
+  color: var(--color-text-muted);
+  max-width: 36ch;
+  margin: 0 auto var(--space-xl);
+}
+
+.form-success__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  justify-content: center;
+  margin-bottom: var(--space-lg);
+}
+
+.form-success__reset {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.form-success__reset:hover {
+  color: var(--color-primary);
 }
 
 .contact-info {
@@ -2862,5 +3088,210 @@ p {
   .whatsapp-float {
     animation-duration: 2.5s;
   }
+}
+
+/* ============================================================
+   WOMEN ARTISAN STORY BAND (product pages)
+   ============================================================ */
+.artisan-band {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2xl);
+  align-items: center;
+  margin: var(--space-3xl) 0;
+  padding: var(--space-2xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+@media (min-width: 860px) {
+  .artisan-band {
+    grid-template-columns: 0.85fr 1fr;
+    padding: var(--space-3xl);
+  }
+}
+
+.artisan-band__media {
+  position: relative;
+}
+
+.artisan-band__media img {
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  max-height: 380px;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(74, 44, 10, 0.16);
+}
+
+.artisan-band__badge {
+  position: absolute;
+  left: var(--space-md);
+  bottom: var(--space-md);
+  background: var(--color-accent);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 100px;
+  box-shadow: 0 6px 18px rgba(74, 44, 10, 0.25);
+}
+
+.artisan-band__eyebrow {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: var(--space-sm);
+}
+
+.artisan-band__content h2 {
+  font-size: clamp(var(--text-2xl), 3vw, var(--text-3xl));
+  margin-bottom: var(--space-md);
+}
+
+.artisan-band__content h2 em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+
+.artisan-band__content p {
+  color: var(--color-text-muted);
+  line-height: 1.75;
+  margin-bottom: var(--space-lg);
+}
+
+.artisan-band__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-lg);
+}
+
+.artisan-band__stats div {
+  display: flex;
+  flex-direction: column;
+}
+
+.artisan-band__stats strong {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--color-primary);
+  line-height: 1.1;
+}
+
+.artisan-band__stats span {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ============================================================
+   WOMEN ARTISAN FEATURE (homepage)
+   ============================================================ */
+.artisan-feature__inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3xl);
+  align-items: center;
+}
+
+@media (min-width: 860px) {
+  .artisan-feature__inner {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.artisan-feature__media {
+  position: relative;
+}
+
+.artisan-feature__media img {
+  width: 100%;
+  border-radius: 24px;
+  box-shadow: 0 16px 44px rgba(74, 44, 10, 0.18);
+}
+
+.artisan-feature__stat-float {
+  position: absolute;
+  right: calc(-1 * var(--space-md));
+  bottom: calc(-1 * var(--space-md));
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(74, 44, 10, 0.3);
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .artisan-feature__stat-float {
+    right: var(--space-md);
+    bottom: calc(-1 * var(--space-sm));
+    padding: var(--space-sm) var(--space-md);
+  }
+}
+
+.artisan-feature__stat-float strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  color: var(--color-accent);
+  line-height: 1;
+}
+
+.artisan-feature__stat-float span {
+  display: block;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+.artisan-feature__content h2 {
+  margin-bottom: var(--space-lg);
+}
+
+.artisan-feature__content > p {
+  color: var(--color-text-muted);
+  font-size: var(--text-lg);
+  line-height: 1.75;
+  margin-bottom: var(--space-lg);
+}
+
+.artisan-feature__points {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-xl);
+  display: grid;
+  gap: var(--space-md);
+}
+
+.artisan-feature__points li {
+  position: relative;
+  padding-left: 2rem;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.artisan-feature__points li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
 }
 

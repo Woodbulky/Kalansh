@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initButtonRipple();
   initHeroGrain();
   initLadooCursor();
+  initContactForm();
 });
 
 function isMobileView() {
@@ -175,25 +176,79 @@ function initProductFilters() {
 
   if (tabs.length === 0 || products.length === 0) return;
 
+  const searchInput = document.getElementById('productSearch');
+  const searchClear = document.getElementById('productSearchClear');
+  const noResults = document.getElementById('productsNoResults');
+  const resetSearchBtn = document.getElementById('productsResetSearch');
+
+  let activeFilter = 'all';
+  let searchTerm = '';
+
+  // Cache each card's searchable text once
+  products.forEach(product => {
+    const name = product.querySelector('.product-card__name');
+    const desc = product.querySelector('.product-card__desc');
+    product.dataset.searchText = (
+      (name ? name.textContent : '') + ' ' +
+      (desc ? desc.textContent : '') + ' ' +
+      (product.dataset.category || '')
+    ).toLowerCase();
+  });
+
+  function applyFilters() {
+    let visibleCount = 0;
+
+    products.forEach(product => {
+      const matchesTab = activeFilter === 'all' || product.dataset.category === activeFilter;
+      const matchesSearch = !searchTerm || product.dataset.searchText.includes(searchTerm);
+
+      if (matchesTab && matchesSearch) {
+        product.style.display = '';
+        product.style.animation = 'fadeInUp 0.4s ease forwards';
+        visibleCount++;
+      } else {
+        product.style.display = 'none';
+      }
+    });
+
+    if (noResults) noResults.hidden = visibleCount !== 0;
+  }
+
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      const filter = tab.dataset.filter;
-
-      // Update active tab
+      activeFilter = tab.dataset.filter;
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-
-      // Filter products
-      products.forEach(product => {
-        if (filter === 'all' || product.dataset.category === filter) {
-          product.style.display = '';
-          product.style.animation = 'fadeInUp 0.4s ease forwards';
-        } else {
-          product.style.display = 'none';
-        }
-      });
+      applyFilters();
     });
   });
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      searchTerm = searchInput.value.trim().toLowerCase();
+      if (searchClear) searchClear.hidden = searchTerm === '';
+      applyFilters();
+    });
+
+    // Pressing Escape clears the search
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && searchInput.value) {
+        clearSearch();
+      }
+    });
+  }
+
+  function clearSearch() {
+    if (!searchInput) return;
+    searchInput.value = '';
+    searchTerm = '';
+    if (searchClear) searchClear.hidden = true;
+    applyFilters();
+    searchInput.focus();
+  }
+
+  if (searchClear) searchClear.addEventListener('click', clearSearch);
+  if (resetSearchBtn) resetSearchBtn.addEventListener('click', clearSearch);
 }
 
 /* ============================================================
@@ -763,5 +818,135 @@ function initLadooCursor() {
     enabled = !enabled;
     showToast(enabled ? '✦ Ladoo trail on' : '✦ Ladoo trail off');
   });
+}
+
+/* ============================================================
+   CONTACT FORM — Validation + success state (no backend)
+   ============================================================ */
+function initContactForm() {
+  const form = document.getElementById('contactForm');
+  if (!form) return;
+
+  const WHATSAPP_NUMBER = '919504959501';
+  const EMAIL_TO = 'kalanshudyognirmit@gmail.com';
+
+  const fields = {
+    name: form.querySelector('#name'),
+    email: form.querySelector('#email'),
+    phone: form.querySelector('#phone'),
+    message: form.querySelector('#message')
+  };
+
+  const successPanel = document.getElementById('formSuccess');
+  const successName = document.getElementById('successName');
+  const successEmail = document.getElementById('successEmail');
+  const successWhatsApp = document.getElementById('successWhatsApp');
+  const resetBtn = document.getElementById('formReset');
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Accepts 7–15 digits, allowing +, spaces, dashes, parentheses
+  const PHONE_RE = /^[+]?[\d\s().-]{7,18}$/;
+
+  function setError(field, msg) {
+    if (!field) return false;
+    const group = field.closest('.form-group');
+    const errorEl = document.getElementById(field.id + '-error');
+    if (group) group.classList.add('has-error');
+    if (errorEl) errorEl.textContent = msg;
+    field.setAttribute('aria-invalid', 'true');
+    return false;
+  }
+
+  function clearError(field) {
+    if (!field) return true;
+    const group = field.closest('.form-group');
+    const errorEl = document.getElementById(field.id + '-error');
+    if (group) group.classList.remove('has-error');
+    if (errorEl) errorEl.textContent = '';
+    field.removeAttribute('aria-invalid');
+    return true;
+  }
+
+  function validateField(field) {
+    if (!field) return true;
+    const value = field.value.trim();
+
+    if (field === fields.name) {
+      if (!value) return setError(field, 'Please enter your name.');
+      if (value.length < 2) return setError(field, 'That name looks a little short.');
+    } else if (field === fields.email) {
+      if (!value) return setError(field, 'Please enter your email address.');
+      if (!EMAIL_RE.test(value)) return setError(field, 'Please enter a valid email address.');
+    } else if (field === fields.phone) {
+      // Optional — only validate if something was typed
+      if (value && !PHONE_RE.test(value)) return setError(field, 'Please enter a valid phone number.');
+    } else if (field === fields.message) {
+      if (!value) return setError(field, 'Please enter a message.');
+      if (value.length < 10) return setError(field, 'Please add a little more detail (10+ characters).');
+    }
+    return clearError(field);
+  }
+
+  // Validate on blur; clear the error as the user fixes it
+  Object.values(fields).forEach(field => {
+    if (!field) return;
+    field.addEventListener('blur', () => validateField(field));
+    field.addEventListener('input', () => {
+      if (field.closest('.form-group').classList.contains('has-error')) {
+        validateField(field);
+      }
+    });
+  });
+
+  function buildMessageText() {
+    const name = fields.name.value.trim();
+    const email = fields.email.value.trim();
+    const phone = fields.phone.value.trim();
+    const message = fields.message.value.trim();
+    let body = `Name: ${name}\nEmail: ${email}`;
+    if (phone) body += `\nPhone: ${phone}`;
+    body += `\n\nMessage:\n${message}`;
+    return body;
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    // Validate every field; focus the first invalid one
+    let firstInvalid = null;
+    Object.values(fields).forEach(field => {
+      const ok = validateField(field);
+      if (!ok && !firstInvalid) firstInvalid = field;
+    });
+
+    if (firstInvalid) {
+      firstInvalid.focus();
+      return;
+    }
+
+    const name = fields.name.value.trim();
+    const bodyText = buildMessageText();
+
+    // Prefill both send options — no backend, user picks a channel
+    const subject = `Website enquiry from ${name}`;
+    successEmail.href = `mailto:${EMAIL_TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+    successWhatsApp.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(bodyText)}`;
+    successName.textContent = name.split(' ')[0] || name;
+
+    // Swap form for the success panel
+    form.hidden = true;
+    successPanel.hidden = false;
+    successPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      form.reset();
+      Object.values(fields).forEach(clearError);
+      successPanel.hidden = true;
+      form.hidden = false;
+      fields.name.focus();
+    });
+  }
 }
 
